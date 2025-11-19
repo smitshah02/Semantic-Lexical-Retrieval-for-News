@@ -5,7 +5,11 @@ import pickle
 import numpy as np
 from pathlib import Path
 from typing import List, Tuple
-from sklearn.metrics.pairwise import cosine_similarity
+
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+except ImportError:
+    raise ImportError("scikit-learn is not installed. Run: pip install scikit-learn")
 
 class TFIDFRetriever:
     """TF-IDF based retrieval."""

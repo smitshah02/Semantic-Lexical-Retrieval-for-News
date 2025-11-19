@@ -4,15 +4,28 @@ Usage: streamlit run app.py
 """
 import streamlit as st
 import sys
+import os
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent / 'src'))
+# Add src to path - handle both local and deployment scenarios
+current_dir = Path(__file__).parent
+src_dir = current_dir / 'src'
+if src_dir.exists():
+    sys.path.insert(0, str(src_dir))
+else:
+    # Try parent directory (for deployment)
+    sys.path.insert(0, str(current_dir))
 
-from retrieve_lexical import load_tfidf_retriever, load_bm25_retriever
-from retrieve_semantic import load_semantic_retriever
-from retrieve_hybrid import HybridRetriever
-from utils import read_jsonl, create_text_snippet
+try:
+    from retrieve_lexical import load_tfidf_retriever, load_bm25_retriever
+    from retrieve_semantic import load_semantic_retriever
+    from retrieve_hybrid import HybridRetriever
+    from utils import read_jsonl, create_text_snippet
+except ImportError as e:
+    st.error(f"Import Error: {e}")
+    st.error(f"Current directory: {current_dir}")
+    st.error(f"Python path: {sys.path}")
+    st.stop()
 
 # Page config
 st.set_page_config(
