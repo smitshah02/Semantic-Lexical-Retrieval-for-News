@@ -7,14 +7,25 @@ import sys
 import os
 from pathlib import Path
 
-# Add src to path - handle both local and deployment scenarios
-current_dir = Path(__file__).parent
+# Add src to path - handle both local and Streamlit Cloud deployment
+current_dir = Path(__file__).parent.absolute()
 src_dir = current_dir / 'src'
-if src_dir.exists():
+
+# For Streamlit Cloud, might be mounted at /mount/src/...
+if not src_dir.exists():
+    # Try to find src relative to current file
+    possible_paths = [
+        current_dir / 'src',
+        Path.cwd() / 'src',
+        Path('/mount/src/semantic-lexical-retrieval-for-news/src'),
+    ]
+    for path in possible_paths:
+        if path.exists():
+            src_dir = path
+            break
+
+if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
-else:
-    # Try parent directory (for deployment)
-    sys.path.insert(0, str(current_dir))
 
 try:
     from retrieve_lexical import load_tfidf_retriever, load_bm25_retriever
@@ -22,9 +33,16 @@ try:
     from retrieve_hybrid import HybridRetriever
     from utils import read_jsonl, create_text_snippet
 except ImportError as e:
-    st.error(f"Import Error: {e}")
-    st.error(f"Current directory: {current_dir}")
-    st.error(f"Python path: {sys.path}")
+    st.error(f"❌ Import Error: {e}")
+    st.error(f"📁 Current directory: {current_dir}")
+    st.error(f"📂 Looking for src in: {src_dir}")
+    st.error(f"🐍 Python path: {sys.path}")
+    
+    # Show what files are available
+    st.error("📄 Files in current directory:")
+    for item in current_dir.iterdir():
+        st.text(f"  - {item.name}")
+    
     st.stop()
 
 # Page config
